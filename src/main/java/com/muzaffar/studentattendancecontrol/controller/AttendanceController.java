@@ -6,10 +6,14 @@ import com.muzaffar.studentattendancecontrol.model.request.AttendanceRequestDTO;
 import com.muzaffar.studentattendancecontrol.model.request.FacultyRequestDTO;
 import com.muzaffar.studentattendancecontrol.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
@@ -52,6 +56,11 @@ public class AttendanceController {
         return ResponseEntity.ok(attendanceService.get(id));
     }
 
+    @GetMapping("/byStudent/{studentId}")
+    public ResponseEntity<?> getList(@PathVariable Integer studentId) {
+        return ResponseEntity.ok(attendanceService.getList(studentId));
+    }
+
     @GetMapping
     public ResponseEntity<List<Attendance>> getList() {
         return ResponseEntity.ok(attendanceService.getList());
@@ -65,5 +74,25 @@ public class AttendanceController {
     @DeleteMapping("{id}")
     public void delete(@PathVariable Integer id) {
         attendanceService.delete(id);
+    }
+
+    @GetMapping("download")
+    public void download(HttpServletResponse response) {
+        File file = attendanceService.getFile();
+        try {
+            attendanceService.download(response, file);
+        } catch (IOException ioException) {
+            response.setStatus(500);
+        }
+    }
+
+    @GetMapping("download/byStudent/{studentId}")
+    public void downloadByStudent(@PathVariable Integer studentId, HttpServletResponse response) {
+        File file = attendanceService.getFile(studentId);
+        try {
+            attendanceService.download(response, file);
+        } catch (IOException ioException) {
+            response.setStatus(500);
+        }
     }
 }

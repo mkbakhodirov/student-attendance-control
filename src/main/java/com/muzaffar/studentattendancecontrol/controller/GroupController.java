@@ -4,10 +4,14 @@ import com.muzaffar.studentattendancecontrol.entity.Group;
 import com.muzaffar.studentattendancecontrol.model.request.GroupRequestDTO;
 import com.muzaffar.studentattendancecontrol.service.GroupService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
@@ -32,6 +36,11 @@ public class GroupController {
         return ResponseEntity.ok(groupService.get(id));
     }
 
+    @GetMapping("/byFaculty/{facultyId}")
+    public ResponseEntity<?> getList(@PathVariable Integer facultyId) {
+        return ResponseEntity.ok(groupService.getList(facultyId));
+    }
+
     @GetMapping
     public ResponseEntity<List<Group>> getList() {
         return ResponseEntity.ok(groupService.getList());
@@ -45,5 +54,15 @@ public class GroupController {
     @DeleteMapping("{id}")
     public void delete(@PathVariable Integer id) {
         groupService.delete(id);
+    }
+
+    @GetMapping("download")
+    public void download(HttpServletResponse response) {
+        File file = groupService.getFile();
+        try {
+            groupService.download(response, file);
+        } catch (IOException ioException) {
+            response.setStatus(500);
+        }
     }
 }

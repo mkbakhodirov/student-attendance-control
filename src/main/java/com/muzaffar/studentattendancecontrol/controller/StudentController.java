@@ -7,14 +7,18 @@ import com.muzaffar.studentattendancecontrol.model.request.StudentRequestDTO;
 import com.muzaffar.studentattendancecontrol.service.AttachmentService;
 import com.muzaffar.studentattendancecontrol.service.StudentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.IOException;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.net.URI;
 import java.util.List;
 
@@ -45,6 +49,11 @@ public class StudentController {
         return ResponseEntity.ok(studentService.get(id));
     }
 
+    @GetMapping("/byGroup/{groupId}")
+    public ResponseEntity<?> getList(@PathVariable Integer groupId) {
+        return ResponseEntity.ok(studentService.getList(groupId));
+    }
+
     @GetMapping
     public ResponseEntity<List<Student>> getList() {
         return ResponseEntity.ok(studentService.getList());
@@ -58,5 +67,15 @@ public class StudentController {
     @DeleteMapping("{id}")
     public void delete(@PathVariable Integer id) {
         studentService.delete(id);
+    }
+
+    @GetMapping("download")
+    public void download(HttpServletResponse response) {
+        File file = studentService.getFile();
+        try {
+            studentService.download(response, file);
+        } catch (IOException ioException) {
+            response.setStatus(500);
+        }
     }
 }

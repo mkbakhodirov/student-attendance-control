@@ -4,10 +4,14 @@ import com.muzaffar.studentattendancecontrol.entity.Faculty;
 import com.muzaffar.studentattendancecontrol.model.request.FacultyRequestDTO;
 import com.muzaffar.studentattendancecontrol.service.FacultyService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
@@ -46,4 +50,15 @@ public class FacultyController {
     public void delete(@PathVariable Integer id) {
         facultyService.delete(id);
     }
+
+    @GetMapping("download")
+    public void download(HttpServletResponse response) {
+        File file = facultyService.getFile();
+        try {
+            facultyService.download(response, file);
+        } catch (IOException ioException) {
+            response.setStatus(500);
+        }
+    }
+
 }

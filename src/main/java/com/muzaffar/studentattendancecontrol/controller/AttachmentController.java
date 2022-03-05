@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
@@ -25,6 +28,15 @@ public class AttachmentController {
                 ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                         .buildAndExpand(attachmentId).toUri();
         return ResponseEntity.created(uri).build();
+    }
+
+    @GetMapping("download/{id}")
+    public void download(@PathVariable Integer id, HttpServletResponse response) {
+        try {
+            attachmentService.download(response, id);
+        } catch (Exception e) {
+            response.setStatus(500);
+        }
     }
 
     @GetMapping("{id}")

@@ -2,14 +2,20 @@ package com.muzaffar.studentattendancecontrol.service;
 
 import com.muzaffar.studentattendancecontrol.entity.Faculty;
 import com.muzaffar.studentattendancecontrol.entity.Group;
+import com.muzaffar.studentattendancecontrol.entity.Student;
 import com.muzaffar.studentattendancecontrol.exception.NotFoundException;
 import com.muzaffar.studentattendancecontrol.exception.UniqueException;
 import com.muzaffar.studentattendancecontrol.model.request.GroupRequestDTO;
 import com.muzaffar.studentattendancecontrol.repository.GroupRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
+import java.io.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -78,4 +84,39 @@ public class GroupService implements BaseService<GroupRequestDTO, Group> {
             throw new NotFoundException("Group is not found");
         groupRepository.deleteById(id);
     }
+
+    @Override
+    public File getFile() {
+        try {
+            File file = new File("file/base/groups.xlsx");
+            InputStream fis = new FileInputStream(file);
+            Workbook wb = new XSSFWorkbook(fis);
+            Sheet sheet = wb.getSheetAt(0);
+            List<Group> groups = getList();
+            int index = 2;
+            for (int i = index; i < index + groups.size(); i++) {
+                Row row = sheet.getRow(i);
+                for (int j = 1; j < 4; j++) {
+                    Group group = groups.get(i - 2);
+                    switch (j) {
+                        case 1 -> row.getCell(j).setCellValue(String.valueOf(group.getId()));
+                        case 2 -> row.getCell(j).setCellValue(group.getName());
+                        case 3 -> row.getCell(j).setCellValue(group.getFaculty().getName());
+                    }
+                }
+            }
+            fis.close();
+            File file1 = new File("file/groups.xlsx");
+            boolean isSuccess = file.createNewFile();
+            FileOutputStream fos = new FileOutputStream(file1);
+            wb.write(fos);
+            fos.close();
+            wb.close();
+            return file1;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }

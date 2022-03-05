@@ -8,9 +8,14 @@ import com.muzaffar.studentattendancecontrol.model.request.StudentRequestDTO;
 import com.muzaffar.studentattendancecontrol.repository.StudentRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -87,6 +92,44 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
         if (!exists)
             throw new NotFoundException("Student is not found");
         studentRepository.deleteById(id);
+    }
+
+    @Override
+    public File getFile() {
+        try {
+            File file = new File("file/base/students.xlsx");
+            InputStream fis = new FileInputStream(file);
+            Workbook wb = new XSSFWorkbook(fis);
+            Sheet sheet = wb.getSheetAt(0);
+            List<Student> students = getList();
+            int index = 2;
+            for (int i = index; i < index + students.size(); i++) {
+                Row row = sheet.getRow(i);
+                for (int j = 1; j < 8; j++) {
+                    Student student = students.get(i - 2);
+                    switch (j) {
+                        case 1 -> row.getCell(j).setCellValue(String.valueOf(student.getId()));
+                        case 2 -> row.getCell(j).setCellValue(student.getLastName());
+                        case 3 -> row.getCell(j).setCellValue(student.getFirstName());
+                        case 4 -> row.getCell(j).setCellValue(student.getPatronymic());
+                        case 5 -> row.getCell(j).setCellValue(String.valueOf(student.getBirthDate()));
+                        case 6 -> row.getCell(j).setCellValue(student.getGroup().getName());
+                        case 7 -> row.getCell(j).setCellValue(student.getGroup().getFaculty().getName());
+                    }
+                }
+            }
+            fis.close();
+            File file1 = new File("file/students.xlsx");
+            boolean isSuccess = file.createNewFile();
+            FileOutputStream fos = new FileOutputStream(file1);
+            wb.write(fos);
+            fos.close();
+            wb.close();
+            return file1;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }

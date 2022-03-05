@@ -9,11 +9,12 @@ import com.muzaffar.studentattendancecontrol.repository.AttachmentRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import java.io.File;
-import java.io.IOException;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,7 +26,7 @@ import java.util.*;
 public class AttachmentService implements BaseService<MultipartHttpServletRequest, Attachment> {
 
     private final AttachmentRepository attachmentRepository;
-    private final String FILE_PACKAGE = "file/";
+    public final String FILE_PACKAGE = "file/";
 
     @Override
     public Integer add(MultipartHttpServletRequest request) {
@@ -42,7 +43,7 @@ public class AttachmentService implements BaseService<MultipartHttpServletReques
             throw new NotValidParamException("File does not have name");
         String contentType = file.getContentType();
         long size = file.getSize();
-        String name = UUID.randomUUID().toString() + "." +
+        String name = UUID.randomUUID() + "." +
                 originalFilename.substring(originalFilename.indexOf("."));
         Path path = Paths.get(FILE_PACKAGE + name);
         try {
@@ -87,7 +88,7 @@ public class AttachmentService implements BaseService<MultipartHttpServletReques
         long size = file.getSize();
         File file1 = new File(FILE_PACKAGE + attachment.getName());
         file1.deleteOnExit();
-        String name = UUID.randomUUID().toString() + "." +
+        String name = UUID.randomUUID() + "." +
                 originalFilename.substring(originalFilename.indexOf("."));
         Path path = Paths.get(FILE_PACKAGE + name);
         try {
@@ -107,12 +108,23 @@ public class AttachmentService implements BaseService<MultipartHttpServletReques
     @Override
     public void delete(Integer id) {
         Attachment attachment = get(id);
-//        boolean exists = attachmentRepository.existsById(id);
-//        if (!exists)
-//            throw new NotFoundException("Attachment is not found");
         File file = new File(FILE_PACKAGE + attachment.getName());
         file.deleteOnExit();
         attachmentRepository.delete(attachment);
+    }
+
+    @Override
+    public File getFile() {
+        return null;
+    }
+
+    public void download(HttpServletResponse response, Integer id) throws IOException {
+        Attachment attachment = get(id);
+        InputStream inputStream = new FileInputStream(FILE_PACKAGE + attachment.getName());
+        response.setHeader("Content-Disposition", "attachment; filename=\"" +
+                attachment.getOriginalFileName() + "\"");
+        response.setContentType("application/force-download");
+        FileCopyUtils.copy(inputStream, response.getOutputStream());
     }
 
 }

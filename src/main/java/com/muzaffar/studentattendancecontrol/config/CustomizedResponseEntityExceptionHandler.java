@@ -58,12 +58,4 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         apiExceptionResponse.setDetails(webRequest.getDescription(false));
         return new ResponseEntity<>(apiExceptionResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
-    @ExceptionHandler(IOException.class)
-    public final ResponseEntity<Object> handleIOExceptions(IOException exception, WebRequest webRequest) {
-        ApiExceptionResponse apiExceptionResponse = new ApiExceptionResponse();
-        apiExceptionResponse.setMessage(exception.getMessage());
-        apiExceptionResponse.setDetails(webRequest.getDescription(false));
-        return new ResponseEntity<>(apiExceptionResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
 }
