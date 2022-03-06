@@ -26,7 +26,7 @@ import java.util.*;
 public class AttachmentService implements BaseService<MultipartHttpServletRequest, Attachment> {
 
     private final AttachmentRepository attachmentRepository;
-    public final String FILE_PACKAGE = "file/";
+    public final String FILE_PACKAGE = "file/attachment/";
 
     @Override
     public Integer add(MultipartHttpServletRequest request) {
@@ -71,7 +71,7 @@ public class AttachmentService implements BaseService<MultipartHttpServletReques
         Optional<Attachment> optional = attachmentRepository.findById(id);
         if (optional.isPresent())
             return optional.get();
-        throw new NotFoundException("Attachment is not found");
+        throw new NotFoundException("Attachment ID = " + id + " is not found");
     }
 
     @Override
@@ -127,4 +127,8 @@ public class AttachmentService implements BaseService<MultipartHttpServletReques
         FileCopyUtils.copy(inputStream, response.getOutputStream());
     }
 
+    @Override
+    public List<Attachment> uploadExcel(MultipartFile file) {
+        return null;
+    }
 }

@@ -2,13 +2,16 @@ package com.muzaffar.studentattendancecontrol.controller;
 
 import com.muzaffar.studentattendancecontrol.entity.Attendance;
 import com.muzaffar.studentattendancecontrol.entity.Faculty;
+import com.muzaffar.studentattendancecontrol.entity.Student;
 import com.muzaffar.studentattendancecontrol.model.request.AttendanceRequestDTO;
 import com.muzaffar.studentattendancecontrol.model.request.FacultyRequestDTO;
 import com.muzaffar.studentattendancecontrol.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.servlet.http.HttpServletResponse;
@@ -94,5 +97,13 @@ public class AttendanceController {
         } catch (IOException ioException) {
             response.setStatus(500);
         }
+    }
+
+    @PostMapping("upload")
+    public ResponseEntity<?> upload(MultipartFile file) {
+        List<Attendance> attendances = attendanceService.uploadExcel(file);
+        if (attendances == null)
+            return ResponseEntity.badRequest().body("Send Excel file");
+        return ResponseEntity.status(HttpStatus.CREATED).body(attendances);
     }
 }

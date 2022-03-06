@@ -9,17 +9,16 @@ import com.muzaffar.studentattendancecontrol.model.request.GroupRequestDTO;
 import com.muzaffar.studentattendancecontrol.repository.GroupRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.time.ZoneId;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +32,7 @@ public class GroupService implements BaseService<GroupRequestDTO, Group> {
         String name = groupRequestDTO.getName();
         boolean exists = groupRepository.existsByName(name);
         if (exists)
-            throw new UniqueException("Group with name + " + name + " already exists");
+            throw new UniqueException("Group with name " + name + " already exists");
         Faculty faculty = facultyService.get(groupRequestDTO.getFacultyId());
         Group group = new Group(name, faculty);
         return groupRepository.save(group).getId();
@@ -55,7 +54,7 @@ public class GroupService implements BaseService<GroupRequestDTO, Group> {
         Optional<Group> optional = groupRepository.findById(id);
         if (optional.isPresent())
             return optional.get();
-        throw new NotFoundException("Group is not found");
+        throw new NotFoundException("Group ID = " + id + " is not found");
     }
 
     @Override
@@ -106,7 +105,7 @@ public class GroupService implements BaseService<GroupRequestDTO, Group> {
                 }
             }
             fis.close();
-            File file1 = new File("file/groups.xlsx");
+            File file1 = new File("file/downloadExcel/groups.xlsx");
             boolean isSuccess = file.createNewFile();
             FileOutputStream fos = new FileOutputStream(file1);
             wb.write(fos);
@@ -119,4 +118,46 @@ public class GroupService implements BaseService<GroupRequestDTO, Group> {
         return null;
     }
 
+    @Override
+    public List<Group> uploadExcel(MultipartFile file) {
+        List<Group> groups = new ArrayList<>();
+        try {
+            InputStream inputStream1 = file.getInputStream();
+            Workbook wb = new XSSFWorkbook(inputStream1);
+            Sheet sheet = wb.getSheetAt(0);
+            Iterator<Row> iterator = sheet.iterator();
+            iterator.next();
+            while (iterator.hasNext()) {
+                Group group = new Group();
+                int j = 0;
+                for (Cell cell : iterator.next()) {
+                    if (cell.getCellType().equals(CellType.BLANK))
+                        return groupRepository.saveAll(groups);
+                    switch (j) {
+                        case 0 -> {
+                            String name = cell.getStringCellValue();
+                            boolean exists = groupRepository.existsByName(name);
+                            if (exists)
+                                throw new UniqueException("Group with name " + name + " already exists");
+                            group.setName(name);
+                        }
+                        case 1 -> {
+                            int facultyId = (int) cell.getNumericCellValue();
+                            Faculty faculty = facultyService.get(facultyId);
+                            group.setFaculty(faculty);
+                        }
+                    }
+                    j++;
+                }
+                groups.add(group);
+            }
+            return groupRepository.saveAll(groups);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
 }

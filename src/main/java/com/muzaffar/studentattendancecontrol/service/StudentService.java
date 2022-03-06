@@ -8,18 +8,17 @@ import com.muzaffar.studentattendancecontrol.model.request.StudentRequestDTO;
 import com.muzaffar.studentattendancecontrol.repository.StudentRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.time.ZoneId;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -64,7 +63,7 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
         Optional<Student> optional = studentRepository.findById(id);
         if (optional.isPresent())
             return optional.get();
-        throw new NotFoundException("Student is not found");
+        throw new NotFoundException("Student ID = " + id + " is not found");
     }
 
     @Override
@@ -98,8 +97,8 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
     public File getFile() {
         try {
             File file = new File("file/base/students.xlsx");
-            InputStream fis = new FileInputStream(file);
-            Workbook wb = new XSSFWorkbook(fis);
+            InputStream inputStream = new FileInputStream(file);
+            Workbook wb = new XSSFWorkbook(inputStream);
             Sheet sheet = wb.getSheetAt(0);
             List<Student> students = getList();
             int index = 2;
@@ -118,12 +117,12 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
                     }
                 }
             }
-            fis.close();
-            File file1 = new File("file/students.xlsx");
+            inputStream.close();
+            File file1 = new File("file/downloadExcel/students.xlsx");
             boolean isSuccess = file.createNewFile();
-            FileOutputStream fos = new FileOutputStream(file1);
-            wb.write(fos);
-            fos.close();
+            FileOutputStream outputStream = new FileOutputStream(file1);
+            wb.write(outputStream);
+            outputStream.close();
             wb.close();
             return file1;
         } catch (Exception e) {
@@ -132,4 +131,44 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
         return null;
     }
 
+    @Override
+    public List<Student> uploadExcel(MultipartFile file) {
+        List<Student> students = new ArrayList<>();
+        try {
+            InputStream inputStream1 = file.getInputStream();
+            Workbook wb = new XSSFWorkbook(inputStream1);
+            Sheet sheet = wb.getSheetAt(0);
+            Iterator<Row> iterator = sheet.iterator();
+            iterator.next();
+            while (iterator.hasNext()) {
+                Student student = new Student();
+                int j = 0;
+                for (Cell cell : iterator.next()) {
+                    if (cell.getCellType().equals(CellType.BLANK))
+                        return studentRepository.saveAll(students);
+                    switch (j) {
+                        case 0 -> student.setLastName(cell.getStringCellValue());
+                        case 1 -> student.setFirstName(cell.getStringCellValue());
+                        case 2 -> student.setPatronymic(cell.getStringCellValue());
+                        case 3 -> {
+                            Date dateCellValue = cell.getDateCellValue();
+                            LocalDate birthDate = dateCellValue.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                            student.setBirthDate(birthDate);
+                        }
+                        case 4 -> {
+                            int groupId = (int) cell.getNumericCellValue();
+                            Group group = groupService.get(groupId);
+                            student.setGroup(group);
+                        }
+                    }
+                    j++;
+                }
+                students.add(student);
+            }
+            return studentRepository.saveAll(students);
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+        return null;
+    }
 }

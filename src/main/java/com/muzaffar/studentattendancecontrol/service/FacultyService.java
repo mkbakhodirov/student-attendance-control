@@ -1,6 +1,7 @@
 package com.muzaffar.studentattendancecontrol.service;
 
 import com.muzaffar.studentattendancecontrol.entity.Faculty;
+import com.muzaffar.studentattendancecontrol.entity.Group;
 import com.muzaffar.studentattendancecontrol.entity.Student;
 import com.muzaffar.studentattendancecontrol.exception.NotFoundException;
 import com.muzaffar.studentattendancecontrol.exception.UniqueException;
@@ -8,25 +9,23 @@ import com.muzaffar.studentattendancecontrol.model.request.FacultyRequestDTO;
 import com.muzaffar.studentattendancecontrol.repository.FacultyRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.io.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.time.ZoneId;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class FacultyService implements BaseService<FacultyRequestDTO, Faculty> {
 
     private final FacultyRepository facultyRepository;
+
     @Override
     public Integer add(FacultyRequestDTO facultyRequestDTO) {
         String name = facultyRequestDTO.getName();
@@ -47,7 +46,7 @@ public class FacultyService implements BaseService<FacultyRequestDTO, Faculty> {
         Optional<Faculty> optional = facultyRepository.findById(id);
         if (optional.isPresent())
             return optional.get();
-        throw new NotFoundException("Faculty is not found");
+        throw new NotFoundException("Faculty ID = " + id + " is not found");
     }
 
     @Override
@@ -99,7 +98,7 @@ public class FacultyService implements BaseService<FacultyRequestDTO, Faculty> {
                 }
             }
             fis.close();
-            File file1 = new File("file/faculties.xlsx");
+            File file1 = new File("file/downloadExcel/faculties.xlsx");
             boolean isSuccess = file.createNewFile();
             FileOutputStream fos = new FileOutputStream(file1);
             wb.write(fos);
@@ -112,4 +111,35 @@ public class FacultyService implements BaseService<FacultyRequestDTO, Faculty> {
         return null;
     }
 
+    @Override
+    public List<Faculty> uploadExcel(MultipartFile file) {
+        List<Faculty> faculties = new ArrayList<>();
+        try {
+            InputStream inputStream1 = file.getInputStream();
+            Workbook wb = new XSSFWorkbook(inputStream1);
+            Sheet sheet = wb.getSheetAt(0);
+            Iterator<Row> iterator = sheet.iterator();
+            iterator.next();
+            while (iterator.hasNext()) {
+                Faculty faculty = new Faculty();
+                for (Cell cell : iterator.next()) {
+                    if (cell.getCellType().equals(CellType.BLANK))
+                        return facultyRepository.saveAll(faculties);
+                    String name = cell.getStringCellValue();
+                    boolean exists = facultyRepository.existsByName(name);
+                    if (exists)
+                        throw new UniqueException("Faculty with name " + name + " already exists");
+                    faculty.setName(name);
+                }
+                faculties.add(faculty);
+            }
+            return facultyRepository.saveAll(faculties);
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
 }

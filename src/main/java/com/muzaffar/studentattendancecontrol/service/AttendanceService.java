@@ -1,26 +1,24 @@
 package com.muzaffar.studentattendancecontrol.service;
 
 import com.muzaffar.studentattendancecontrol.entity.Attendance;
+import com.muzaffar.studentattendancecontrol.entity.Group;
 import com.muzaffar.studentattendancecontrol.entity.Student;
 import com.muzaffar.studentattendancecontrol.exception.NotFoundException;
 import com.muzaffar.studentattendancecontrol.model.request.AttendanceRequestDTO;
 import com.muzaffar.studentattendancecontrol.repository.AttendanceRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.io.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -79,7 +77,7 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
         Optional<Attendance> optional = attendanceRepository.findById(id);
         if (optional.isPresent())
             return optional.get();
-        throw new NotFoundException("Attendance is not found");
+        throw new NotFoundException("Attendance ID = " + id + " is not found");
     }
 
     @Override
@@ -135,7 +133,7 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
                 }
             }
             fis.close();
-            File file1 = new File("file/attendances.xlsx");
+            File file1 = new File("file/downloadExcel/attendances.xlsx");
             boolean isSuccess = file.createNewFile();
             FileOutputStream fos = new FileOutputStream(file1);
             wb.write(fos);
@@ -186,7 +184,7 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
                 }
             }
             fis.close();
-            File file1 = new File("file/student-attendances.xlsx");
+            File file1 = new File("file/downloadExcel/student-attendances.xlsx");
             boolean isSuccess = file.createNewFile();
             FileOutputStream fos = new FileOutputStream(file1);
             wb.write(fos);
@@ -199,5 +197,40 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
         return null;
     }
 
+    @Override
+    public List<Attendance> uploadExcel(MultipartFile file) {
+        List<Attendance> attendances = new ArrayList<>();
+        try {
+            InputStream inputStream1 = file.getInputStream();
+            Workbook wb = new XSSFWorkbook(inputStream1);
+            Sheet sheet = wb.getSheetAt(0);
+            Iterator<Row> iterator = sheet.iterator();
+            iterator.next();
+            while (iterator.hasNext()) {
+                Attendance attendance = new Attendance();
+                int j = 0;
+                for (Cell cell : iterator.next()) {
+                    if (cell.getCellType().equals(CellType.BLANK))
+                        return attendanceRepository.saveAll(attendances);
+                    switch (j) {
+                        case 0 -> {
+                            int studentId = (int) cell.getNumericCellValue();
+                            System.out.println(studentId);
+                            Student student = studentService.get(studentId);
+                            attendance.setStudent(student);
+                        }
+                        case 1 -> attendance.setArrivalTime(cell.getLocalDateTimeCellValue());
+                        case 2 -> attendance.setDepartureTime(cell.getLocalDateTimeCellValue());
+                    }
+                    j++;
+                }
+                attendances.add(attendance);
+            }
+            return attendanceRepository.saveAll(attendances);
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+        return null;
+    }
 }
 

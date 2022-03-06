@@ -9,6 +9,7 @@ import com.muzaffar.studentattendancecontrol.service.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.FileCopyUtils;
@@ -77,5 +78,13 @@ public class StudentController {
         } catch (IOException ioException) {
             response.setStatus(500);
         }
+    }
+
+    @PostMapping("upload")
+    public ResponseEntity<?> upload(MultipartFile file) {
+        List<Student> students = studentService.uploadExcel(file);
+        if (students == null)
+            return ResponseEntity.badRequest().body("Send Excel file");
+        return ResponseEntity.status(HttpStatus.CREATED).body(students);
     }
 }
