@@ -153,7 +153,6 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
             Workbook wb = new XSSFWorkbook(fis);
             Sheet sheet = wb.getSheetAt(0);
             List<Attendance> attendances = getList(studentId);
-            System.out.println(attendances);
             Student student = attendances.get(0).getStudent();
             Row row = sheet.getRow(2);
             for (int j = 1; j < 5; j++) {

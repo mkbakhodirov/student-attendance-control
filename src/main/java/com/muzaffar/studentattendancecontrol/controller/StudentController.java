@@ -1,5 +1,6 @@
 package com.muzaffar.studentattendancecontrol.controller;
 
+import com.itextpdf.text.DocumentException;
 import com.muzaffar.studentattendancecontrol.entity.Group;
 import com.muzaffar.studentattendancecontrol.entity.Student;
 import com.muzaffar.studentattendancecontrol.model.request.GroupRequestDTO;
@@ -70,7 +71,7 @@ public class StudentController {
         studentService.delete(id);
     }
 
-    @GetMapping("download")
+    @GetMapping("download/excel")
     public void download(HttpServletResponse response) {
         File file = studentService.getFile();
         try {
@@ -80,11 +81,22 @@ public class StudentController {
         }
     }
 
-    @PostMapping("upload")
+    @PostMapping("upload/excel")
     public ResponseEntity<?> upload(MultipartFile file) {
         List<Student> students = studentService.uploadExcel(file);
         if (students == null)
             return ResponseEntity.badRequest().body("Send Excel file");
         return ResponseEntity.status(HttpStatus.CREATED).body(students);
+    }
+
+    @GetMapping("download/pdf/{id}")
+    public void downloadPdf(@PathVariable Integer id, HttpServletResponse response) {
+        try {
+            File file = studentService.getPdf(id);
+            studentService.download(response, file);
+        } catch (IOException | DocumentException exception) {
+            exception.printStackTrace();
+            response.setStatus(500);
+        }
     }
 }

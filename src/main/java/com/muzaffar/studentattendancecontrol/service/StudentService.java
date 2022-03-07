@@ -1,6 +1,12 @@
 package com.muzaffar.studentattendancecontrol.service;
 
+import com.itextpdf.text.*;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
 import com.muzaffar.studentattendancecontrol.entity.Attachment;
+import com.muzaffar.studentattendancecontrol.entity.Attendance;
 import com.muzaffar.studentattendancecontrol.entity.Group;
 import com.muzaffar.studentattendancecontrol.entity.Student;
 import com.muzaffar.studentattendancecontrol.exception.NotFoundException;
@@ -18,7 +24,10 @@ import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -170,5 +179,60 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
             ioException.printStackTrace();
         }
         return null;
+    }
+
+    public File getPdf(Integer id) throws DocumentException, IOException {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        Document document = new Document();
+        File file = new File(DOWNLOAD_PDF + "student.pdf");
+        PdfWriter.getInstance(document, new FileOutputStream(file));
+        document.open();
+
+        Student student = get(id);
+        String name = student.getAttachment().getName();
+
+        Image image = Image.getInstance(AttachmentService.FILE_PACKAGE + name);
+        image.scaleAbsolute(75f, 75f);
+        image.setAlignment(Element.ALIGN_CENTER);
+        document.add(image);
+
+        Font font = FontFactory.getFont(FontFactory.TIMES_BOLD);
+
+        PdfPTable table = new PdfPTable(5);
+        table.setSpacingBefore(15f);
+        table.setSpacingAfter(15f);
+        Stream.of("ID", "Full Name", "Birth Date", "Group", "Faculty")
+                        .forEach(columnTitle -> {
+                            Chunk chunk = new Chunk(columnTitle, font);
+                            PdfPCell header = new PdfPCell(new Phrase(chunk));
+                            header.setHorizontalAlignment(Element.ALIGN_CENTER);
+                            table.addCell(header);
+                        });
+        String fullName = String.format("%s %s %s", student.getLastName(), student.getFirstName(), student.getPatronymic());
+        table.addCell(new PdfPCell(new Phrase(student.getId().toString())));
+        table.addCell(new PdfPCell(new Phrase(fullName)));
+        table.addCell(new PdfPCell(new Phrase(String.valueOf(student.getBirthDate()))));
+        table.addCell(new PdfPCell(new Phrase(student.getGroup().getName())));
+        table.addCell(new PdfPCell(new Phrase(student.getGroup().getFaculty().getName())));
+        document.add(table);
+
+        PdfPTable table1 = new PdfPTable(3);
+        Stream.of("ID", "Arrival Time", "Departure Time")
+                .forEach(columnTitle -> {
+                    Chunk chunk = new Chunk(columnTitle, font);
+                    PdfPCell header = new PdfPCell(new Phrase(chunk));
+                    header.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    table1.addCell(header);
+                });
+        for (Attendance attendance : student.getAttendances()) {
+            table1.addCell(new PdfPCell(new Phrase(attendance.getId().toString())));
+            table1.addCell(new PdfPCell(new Phrase(attendance.getArrivalTime().format(formatter))));
+            table1.addCell(new PdfPCell(new Phrase(attendance.getDepartureTime().format(formatter))));
+        }
+        document.add(table1);
+
+        document.close();
+        return file;
     }
 }

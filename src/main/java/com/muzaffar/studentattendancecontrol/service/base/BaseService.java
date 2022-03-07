@@ -8,6 +8,8 @@ import java.io.*;
 import java.util.List;
 
 public interface BaseService<T, R> {
+    String DOWNLOAD_PDF = "file/downloadPdf/";
+
     Integer add(T t);
     List<R> getList();
     List<R> getList(Integer id);

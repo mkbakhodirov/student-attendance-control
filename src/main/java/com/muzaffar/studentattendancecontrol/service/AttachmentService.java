@@ -26,7 +26,7 @@ import java.util.*;
 public class AttachmentService implements BaseService<MultipartHttpServletRequest, Attachment> {
 
     private final AttachmentRepository attachmentRepository;
-    public final String FILE_PACKAGE = "file/attachment/";
+    public static final String FILE_PACKAGE = "file/attachment/";
 
     @Override
     public Integer add(MultipartHttpServletRequest request) {
