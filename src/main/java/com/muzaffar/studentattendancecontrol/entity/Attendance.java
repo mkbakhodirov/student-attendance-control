@@ -23,4 +23,15 @@ public class Attendance extends BaseEntity {
     private LocalDateTime departureTime;
     @ManyToOne
     private Student student;
+    private boolean sent;
+
+    {
+        sent = false;
+    }
+
+    public Attendance(LocalDateTime arrivalTime, LocalDateTime departureTime, Student student) {
+        this.arrivalTime = arrivalTime;
+        this.departureTime = departureTime;
+        this.student = student;
+    }
 }

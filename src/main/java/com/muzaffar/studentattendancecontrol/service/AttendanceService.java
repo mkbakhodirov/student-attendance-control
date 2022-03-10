@@ -4,16 +4,22 @@ import com.muzaffar.studentattendancecontrol.entity.Attendance;
 import com.muzaffar.studentattendancecontrol.entity.Group;
 import com.muzaffar.studentattendancecontrol.entity.Student;
 import com.muzaffar.studentattendancecontrol.exception.NotFoundException;
+import com.muzaffar.studentattendancecontrol.model.AttendanceForwardDto;
 import com.muzaffar.studentattendancecontrol.model.request.AttendanceRequestDTO;
 import com.muzaffar.studentattendancecontrol.repository.AttendanceRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.modelmapper.ModelMapper;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -26,6 +32,8 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
 
     private final AttendanceRepository attendanceRepository;
     private final StudentService studentService;
+    private final RestTemplate restTemplate;
+    private final ModelMapper modelMapper;
 
     @Override
     public Integer add(AttendanceRequestDTO attendanceRequestDTO) {
@@ -230,6 +238,17 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
             ioException.printStackTrace();
         }
         return null;
+    }
+
+    public List<AttendanceForwardDto> send() {
+        List<Attendance> attendances = attendanceRepository.findAllBySent(false);
+        List<AttendanceForwardDto> list = new ArrayList<>();
+        for (Attendance attendance : attendances) {
+            AttendanceForwardDto attendanceForwardDto = modelMapper.map(attendance, AttendanceForwardDto.class);
+            attendanceForwardDto.setStudentId(attendance.getStudent().getId());
+            list.add(attendanceForwardDto);
+        }
+        return list;
     }
 }
 
