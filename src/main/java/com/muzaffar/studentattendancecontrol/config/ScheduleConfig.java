@@ -24,14 +24,18 @@ public class ScheduleConfig {
     private final AttendanceRepository attendanceRepository;
 
     @Scheduled(fixedDelay = 10000L)
-    public void sendAttendances() throws URISyntaxException {
-        String url = "http://localhost:8081/api/attendances";
-        List<AttendanceForwardDto> list = attendanceService.send();
-        if (list != null && !list.isEmpty()) {
-            restTemplate.postForObject(new URI(url), list, ResponseEntity.class);
-            for (AttendanceForwardDto attendanceForwardDto : list) {
-                attendanceRepository.updateSent(attendanceForwardDto.getId());
+    public void sendAttendances() {
+        try {
+            String url = "http://localhost:8081/api/attendances";
+            List<AttendanceForwardDto> list = attendanceService.send();
+            if (list != null && !list.isEmpty()) {
+                restTemplate.postForObject(new URI(url), list, ResponseEntity.class);
+                for (AttendanceForwardDto attendanceForwardDto : list) {
+                    attendanceRepository.updateSent(attendanceForwardDto.getId());
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
