@@ -1,22 +1,15 @@
 package com.muzaffar.studentattendancecontrol.controller;
 
 import com.itextpdf.text.DocumentException;
-import com.muzaffar.studentattendancecontrol.entity.Group;
 import com.muzaffar.studentattendancecontrol.entity.Student;
-import com.muzaffar.studentattendancecontrol.model.request.GroupRequestDTO;
-import com.muzaffar.studentattendancecontrol.model.request.StudentRequestDTO;
+import com.muzaffar.studentattendancecontrol.model.dto.StudentRequestDTO;
 import com.muzaffar.studentattendancecontrol.service.AttachmentService;
 import com.muzaffar.studentattendancecontrol.service.StudentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.servlet.http.HttpServletResponse;

@@ -1,13 +1,11 @@
 package com.muzaffar.studentattendancecontrol.controller;
 
 import com.muzaffar.studentattendancecontrol.entity.Group;
-import com.muzaffar.studentattendancecontrol.entity.Student;
 import com.muzaffar.studentattendancecontrol.exception.UniqueException;
-import com.muzaffar.studentattendancecontrol.model.request.GroupRequestDTO;
+import com.muzaffar.studentattendancecontrol.model.dto.GroupRequestDTO;
 import com.muzaffar.studentattendancecontrol.service.GroupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;

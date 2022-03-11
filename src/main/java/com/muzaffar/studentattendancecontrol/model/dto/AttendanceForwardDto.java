@@ -1,4 +1,4 @@
-package com.muzaffar.studentattendancecontrol.model;
+package com.muzaffar.studentattendancecontrol.model.dto;
 
 import lombok.Data;
 

@@ -2,10 +2,9 @@ package com.muzaffar.studentattendancecontrol.service;
 
 import com.muzaffar.studentattendancecontrol.entity.Faculty;
 import com.muzaffar.studentattendancecontrol.entity.Group;
-import com.muzaffar.studentattendancecontrol.entity.Student;
 import com.muzaffar.studentattendancecontrol.exception.NotFoundException;
 import com.muzaffar.studentattendancecontrol.exception.UniqueException;
-import com.muzaffar.studentattendancecontrol.model.request.GroupRequestDTO;
+import com.muzaffar.studentattendancecontrol.model.dto.GroupRequestDTO;
 import com.muzaffar.studentattendancecontrol.repository.GroupRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.*;
 
 @Service

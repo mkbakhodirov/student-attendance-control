@@ -1,14 +1,11 @@
 package com.muzaffar.studentattendancecontrol.controller;
 
 import com.muzaffar.studentattendancecontrol.entity.Attendance;
-import com.muzaffar.studentattendancecontrol.entity.Faculty;
-import com.muzaffar.studentattendancecontrol.entity.Student;
-import com.muzaffar.studentattendancecontrol.model.request.AttendanceRequestDTO;
-import com.muzaffar.studentattendancecontrol.model.request.FacultyRequestDTO;
+import com.muzaffar.studentattendancecontrol.model.dto.AttendanceRequestDTO;
+import com.muzaffar.studentattendancecontrol.repository.AttendanceRepository;
 import com.muzaffar.studentattendancecontrol.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,13 +23,15 @@ import java.util.List;
 public class AttendanceController {
 
     private final AttendanceService attendanceService;
+    private final AttendanceRepository attendanceRepository;
 
     @PostMapping
-    public ResponseEntity<?> add(@RequestBody AttendanceRequestDTO attendanceRequestDTO) {
+    public ResponseEntity<?> add(@RequestBody AttendanceRequestDTO attendanceRequestDTO) throws Exception {
         Integer attendanceId = attendanceService.add(attendanceRequestDTO);
         URI uri =
                 ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                         .buildAndExpand(attendanceId).toUri();
+        attendanceService.sendToRabbit(attendanceRequestDTO, attendanceId);
         return ResponseEntity.created(uri).build();
     }
 

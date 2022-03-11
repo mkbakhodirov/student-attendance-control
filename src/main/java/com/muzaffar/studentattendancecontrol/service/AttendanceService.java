@@ -1,28 +1,25 @@
 package com.muzaffar.studentattendancecontrol.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.muzaffar.studentattendancecontrol.entity.Attendance;
-import com.muzaffar.studentattendancecontrol.entity.Group;
 import com.muzaffar.studentattendancecontrol.entity.Student;
 import com.muzaffar.studentattendancecontrol.exception.NotFoundException;
-import com.muzaffar.studentattendancecontrol.model.AttendanceForwardDto;
-import com.muzaffar.studentattendancecontrol.model.request.AttendanceRequestDTO;
+import com.muzaffar.studentattendancecontrol.model.dto.AttendanceForwardDto;
+import com.muzaffar.studentattendancecontrol.model.dto.AttendanceRequestDTO;
+import com.muzaffar.studentattendancecontrol.rabbitmq.Sender;
 import com.muzaffar.studentattendancecontrol.repository.AttendanceRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
-import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.net.URI;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -34,6 +31,8 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
     private final StudentService studentService;
     private final RestTemplate restTemplate;
     private final ModelMapper modelMapper;
+    private final ObjectMapper objectMapper;
+    private final Sender sender;
 
     @Override
     public Integer add(AttendanceRequestDTO attendanceRequestDTO) {
@@ -249,6 +248,12 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
             list.add(attendanceForwardDto);
         }
         return list;
+    }
+
+    public void sendToRabbit(AttendanceRequestDTO attendanceRequestDTO, Integer attendanceId) throws JsonProcessingException {
+        String json = objectMapper.writeValueAsString(attendanceRequestDTO);
+        sender.send(json);
+        attendanceRepository.updateSent(attendanceId);
     }
 }
 

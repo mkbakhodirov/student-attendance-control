@@ -10,7 +10,7 @@ import com.muzaffar.studentattendancecontrol.entity.Attendance;
 import com.muzaffar.studentattendancecontrol.entity.Group;
 import com.muzaffar.studentattendancecontrol.entity.Student;
 import com.muzaffar.studentattendancecontrol.exception.NotFoundException;
-import com.muzaffar.studentattendancecontrol.model.request.StudentRequestDTO;
+import com.muzaffar.studentattendancecontrol.model.dto.StudentRequestDTO;
 import com.muzaffar.studentattendancecontrol.repository.StudentRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
