@@ -11,7 +11,8 @@ import com.muzaffar.studentattendancecontrol.entity.Group;
 import com.muzaffar.studentattendancecontrol.entity.Student;
 import com.muzaffar.studentattendancecontrol.exception.NotFoundException;
 import com.muzaffar.studentattendancecontrol.model.dto.StudentRequestDTO;
-import com.muzaffar.studentattendancecontrol.repository.StudentRepository;
+import com.muzaffar.studentattendancecontrol.repository.elasticsearch.StudentElasticRepo;
+import com.muzaffar.studentattendancecontrol.repository.jpa.StudentRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
@@ -34,19 +35,19 @@ import java.util.stream.Stream;
 public class StudentService implements BaseService<StudentRequestDTO, Student> {
 
     private final StudentRepository studentRepository;
+    private final StudentElasticRepo studentElasticRepo;
     private final GroupService groupService;
     private final AttachmentService attachmentService;
     private final ModelMapper modelMapper;
 
     @Override
-    public Integer add(StudentRequestDTO studentRequestDTO) {
+    public String add(StudentRequestDTO studentRequestDTO) {
         Group group = groupService.get(studentRequestDTO.getGroupId());
         Attachment attachment = attachmentService.get(studentRequestDTO.getAttachmentId());
         Student student = new Student();
         String firstName = studentRequestDTO.getFirstName();
         String lastName = studentRequestDTO.getLastName();
         String patronymic = studentRequestDTO.getPatronymic();
-        LocalDate birthDate = LocalDate.parse(studentRequestDTO.getBirthDate());
         student.setFirstName(firstName);
         student.setLastName(lastName);
         student.setPatronymic(patronymic);
@@ -62,13 +63,13 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
     }
 
     @Override
-    public List<Student> getList(Integer groupId) {
+    public List<Student> getList(String groupId) {
         Group group = groupService.get(groupId);
         return group.getStudents();
     }
 
     @Override
-    public Student get(Integer id) {
+    public Student get(String id) {
         Optional<Student> optional = studentRepository.findById(id);
         if (optional.isPresent())
             return optional.get();
@@ -76,7 +77,7 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
     }
 
     @Override
-    public Student update(Integer id, StudentRequestDTO studentRequestDTO) {
+    public Student update(String id, StudentRequestDTO studentRequestDTO) {
         Student student = get(id);
         Attachment attachment = attachmentService.get(studentRequestDTO.getAttachmentId());
         Group group = groupService.get(studentRequestDTO.getGroupId());
@@ -95,7 +96,7 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(String id) {
         boolean exists = studentRepository.existsById(id);
         if (!exists)
             throw new NotFoundException("Student is not found");
@@ -116,7 +117,7 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
                 for (int j = 1; j < 8; j++) {
                     Student student = students.get(i - 2);
                     switch (j) {
-                        case 1 -> row.getCell(j).setCellValue(String.valueOf(student.getId()));
+                        case 1 -> row.getCell(j).setCellValue(student.getId());
                         case 2 -> row.getCell(j).setCellValue(student.getLastName());
                         case 3 -> row.getCell(j).setCellValue(student.getFirstName());
                         case 4 -> row.getCell(j).setCellValue(student.getPatronymic());
@@ -165,7 +166,7 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
                             student.setBirthDate(birthDate);
                         }
                         case 4 -> {
-                            int groupId = (int) cell.getNumericCellValue();
+                            String groupId = cell.getStringCellValue();
                             Group group = groupService.get(groupId);
                             student.setGroup(group);
                         }
@@ -181,7 +182,7 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
         return null;
     }
 
-    public File getPdf(Integer id) throws DocumentException, IOException {
+    public File getPdf(String id) throws DocumentException, IOException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         Document document = new Document();
@@ -210,7 +211,7 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
                             table.addCell(header);
                         });
         String fullName = String.format("%s %s %s", student.getLastName(), student.getFirstName(), student.getPatronymic());
-        table.addCell(new PdfPCell(new Phrase(student.getId().toString())));
+        table.addCell(new PdfPCell(new Phrase(student.getId())));
         table.addCell(new PdfPCell(new Phrase(fullName)));
         table.addCell(new PdfPCell(new Phrase(String.valueOf(student.getBirthDate()))));
         table.addCell(new PdfPCell(new Phrase(student.getGroup().getName())));
@@ -226,7 +227,7 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
                     table1.addCell(header);
                 });
         for (Attendance attendance : student.getAttendances()) {
-            table1.addCell(new PdfPCell(new Phrase(attendance.getId().toString())));
+            table1.addCell(new PdfPCell(new Phrase(attendance.getId())));
             table1.addCell(new PdfPCell(new Phrase(attendance.getArrivalTime().format(formatter))));
             table1.addCell(new PdfPCell(new Phrase(attendance.getDepartureTime().format(formatter))));
         }
@@ -234,5 +235,20 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
 
         document.close();
         return file;
+    }
+
+    public List<Student> getListByLastName(String lastName) {
+        System.out.println(1);
+        List<Student> list = studentElasticRepo.findByLastName(lastName);
+        System.out.println(list);
+        return list;
+    }
+
+    public List<Student> getList(String lastName, String firstName) {
+        return studentElasticRepo.findAllByLastNameAndFirstName(lastName, firstName);
+    }
+
+    public List<Student> getListByGroupName(String groupName) {
+        return studentElasticRepo.findAllByGroup_Name(groupName);
     }
 }

@@ -5,7 +5,7 @@ import com.muzaffar.studentattendancecontrol.entity.Group;
 import com.muzaffar.studentattendancecontrol.exception.NotFoundException;
 import com.muzaffar.studentattendancecontrol.exception.UniqueException;
 import com.muzaffar.studentattendancecontrol.model.dto.GroupRequestDTO;
-import com.muzaffar.studentattendancecontrol.repository.GroupRepository;
+import com.muzaffar.studentattendancecontrol.repository.jpa.GroupRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
@@ -25,7 +25,7 @@ public class GroupService implements BaseService<GroupRequestDTO, Group> {
     private final FacultyService facultyService;
 
     @Override
-    public Integer add(GroupRequestDTO groupRequestDTO) {
+    public String add(GroupRequestDTO groupRequestDTO) {
         String name = groupRequestDTO.getName();
         boolean exists = groupRepository.existsByName(name);
         if (exists)
@@ -41,13 +41,13 @@ public class GroupService implements BaseService<GroupRequestDTO, Group> {
     }
 
     @Override
-    public List<Group> getList(Integer facultyId) {
+    public List<Group> getList(String facultyId) {
         Faculty faculty = facultyService.get(facultyId);
         return faculty.getGroups();
     }
 
     @Override
-    public Group get(Integer id) {
+    public Group get(String id) {
         Optional<Group> optional = groupRepository.findById(id);
         if (optional.isPresent())
             return optional.get();
@@ -55,7 +55,7 @@ public class GroupService implements BaseService<GroupRequestDTO, Group> {
     }
 
     @Override
-    public Group update(Integer id, GroupRequestDTO groupRequestDTO) {
+    public Group update(String id, GroupRequestDTO groupRequestDTO) {
         Optional<Group> optional = groupRepository.findById(id);
         if (optional.isPresent()) {
             Faculty faculty = facultyService.get(groupRequestDTO.getFacultyId());
@@ -74,7 +74,7 @@ public class GroupService implements BaseService<GroupRequestDTO, Group> {
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(String id) {
         boolean exists = groupRepository.existsById(id);
         if (!exists)
             throw new NotFoundException("Group is not found");
@@ -95,7 +95,7 @@ public class GroupService implements BaseService<GroupRequestDTO, Group> {
                 for (int j = 1; j < 4; j++) {
                     Group group = groups.get(i - 2);
                     switch (j) {
-                        case 1 -> row.getCell(j).setCellValue(String.valueOf(group.getId()));
+                        case 1 -> row.getCell(j).setCellValue(group.getId());
                         case 2 -> row.getCell(j).setCellValue(group.getName());
                         case 3 -> row.getCell(j).setCellValue(group.getFaculty().getName());
                     }
@@ -139,7 +139,7 @@ public class GroupService implements BaseService<GroupRequestDTO, Group> {
                             group.setName(name);
                         }
                         case 1 -> {
-                            int facultyId = (int) cell.getNumericCellValue();
+                            String facultyId = cell.getStringCellValue();
                             Faculty faculty = facultyService.get(facultyId);
                             group.setFaculty(faculty);
                         }

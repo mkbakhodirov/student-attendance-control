@@ -6,8 +6,8 @@ import java.time.LocalDateTime;
 
 @Data
 public class AttendanceForwardDto {
-    private Integer id;
+    private String id;
     private LocalDateTime arrivalTime;
     private LocalDateTime departureTime;
-    private Integer studentId;
+    private String studentId;
 }

@@ -23,7 +23,7 @@ public class AttachmentController {
 
     @PostMapping("upload")
     public ResponseEntity<?> add(MultipartHttpServletRequest request) {
-        Integer attachmentId = attachmentService.add(request);
+        String attachmentId = attachmentService.add(request);
         URI uri =
                 ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                         .buildAndExpand(attachmentId).toUri();
@@ -31,7 +31,7 @@ public class AttachmentController {
     }
 
     @GetMapping("download/{id}")
-    public void download(@PathVariable Integer id, HttpServletResponse response) {
+    public void download(@PathVariable String id, HttpServletResponse response) {
         try {
             attachmentService.download(response, id);
         } catch (Exception e) {
@@ -40,7 +40,7 @@ public class AttachmentController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Attachment> get(@PathVariable Integer id) {
+    public ResponseEntity<Attachment> get(@PathVariable String id) {
         return ResponseEntity.ok(attachmentService.get(id));
     }
 
@@ -50,12 +50,12 @@ public class AttachmentController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<Attachment> update(@PathVariable Integer id, MultipartHttpServletRequest request) {
+    public ResponseEntity<Attachment> update(@PathVariable String id, MultipartHttpServletRequest request) {
         return ResponseEntity.ok(attachmentService.update(id, request));
     }
 
     @DeleteMapping("{id}")
-    public void delete(@PathVariable Integer id) {
+    public void delete(@PathVariable String id) {
         attachmentService.delete(id);
     }
 }

@@ -8,7 +8,7 @@ import com.muzaffar.studentattendancecontrol.exception.NotFoundException;
 import com.muzaffar.studentattendancecontrol.model.dto.AttendanceForwardDto;
 import com.muzaffar.studentattendancecontrol.model.dto.AttendanceRequestDTO;
 import com.muzaffar.studentattendancecontrol.rabbitmq.Sender;
-import com.muzaffar.studentattendancecontrol.repository.AttendanceRepository;
+import com.muzaffar.studentattendancecontrol.repository.jpa.AttendanceRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
@@ -35,8 +35,8 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
     private final Sender sender;
 
     @Override
-    public Integer add(AttendanceRequestDTO attendanceRequestDTO) {
-        Integer studentId = attendanceRequestDTO.getStudentId();
+    public String add(AttendanceRequestDTO attendanceRequestDTO) {
+        String studentId = attendanceRequestDTO.getStudentId();
         Student student = studentService.get(studentId);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime arrivalTime = LocalDateTime.parse(attendanceRequestDTO.getArrivalTime(), formatter);
@@ -45,7 +45,7 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
         return attendanceRepository.save(attendance).getId();
     }
 
-    public Integer arrive(Integer studentId) {
+    public String arrive(String studentId) {
         Student student = studentService.get(studentId);
         Attendance attendance = new Attendance();
         attendance.setArrivalTime(LocalDateTime.now());
@@ -53,7 +53,7 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
         return attendanceRepository.save(attendance).getId();
     }
 
-    public Integer departure(Integer studentId) {
+    public String departure(String studentId) {
         Student student = studentService.get(studentId);
         Optional<Attendance> optional = attendanceRepository.findFirstByStudentIdAndDepartureTimeOrderByArrivalTimeDesc(studentId, null);
         if (optional.isEmpty()) {
@@ -74,13 +74,13 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
     }
 
     @Override
-    public List<Attendance> getList(Integer studentId) {
+    public List<Attendance> getList(String studentId) {
         Student student = studentService.get(studentId);
         return student.getAttendances();
     }
 
     @Override
-    public Attendance get(Integer id) {
+    public Attendance get(String id) {
         Optional<Attendance> optional = attendanceRepository.findById(id);
         if (optional.isPresent())
             return optional.get();
@@ -88,7 +88,7 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
     }
 
     @Override
-    public Attendance update(Integer id, AttendanceRequestDTO attendanceRequestDTO) {
+    public Attendance update(String id, AttendanceRequestDTO attendanceRequestDTO) {
         Attendance attendance = get(id);
         Student student = studentService.get(attendanceRequestDTO.getStudentId());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -102,7 +102,7 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(String id) {
         boolean exists = attendanceRepository.existsById(id);
         if (!exists)
             throw new NotFoundException("Attendance is not found");
@@ -125,7 +125,7 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
                     Student student = attendance.getStudent();
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                     switch (j) {
-                        case 1 -> row.getCell(j).setCellValue(String.valueOf(attendance.getId()));
+                        case 1 -> row.getCell(j).setCellValue(attendance.getId());
                         case 2 -> row.getCell(j).setCellValue(
                                 String.format("%s %s %s",
                                         student.getLastName(),
@@ -153,7 +153,7 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
         return null;
     }
 
-    public File getFile(Integer studentId) {
+    public File getFile(String studentId) {
         try {
             File file = new File("file/base/student-attendances.xlsx");
             InputStream fis = new FileInputStream(file);
@@ -164,7 +164,7 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
             Row row = sheet.getRow(2);
             for (int j = 1; j < 5; j++) {
                 switch (j) {
-                    case 1 -> row.getCell(j).setCellValue(String.valueOf(student.getId()));
+                    case 1 -> row.getCell(j).setCellValue(student.getId());
                     case 2 -> row.getCell(j).setCellValue(
                             String.format("%s %s %s",
                                     student.getLastName(),
@@ -183,7 +183,7 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
                     Attendance attendance = attendances.get(i - 5);
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                     switch (j) {
-                        case 1 -> row.getCell(j).setCellValue(String.valueOf(attendance.getId()));
+                        case 1 -> row.getCell(j).setCellValue(attendance.getId());
                         case 2 -> row.getCell(j).setCellValue(attendance.getArrivalTime().format(formatter));
                         case 3 -> row.getCell(j).setCellValue(attendance.getDepartureTime().format(formatter));
                     }
@@ -220,8 +220,7 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
                         return attendanceRepository.saveAll(attendances);
                     switch (j) {
                         case 0 -> {
-                            int studentId = (int) cell.getNumericCellValue();
-                            System.out.println(studentId);
+                            String studentId = cell.getStringCellValue();
                             Student student = studentService.get(studentId);
                             attendance.setStudent(student);
                         }
@@ -250,7 +249,7 @@ public class AttendanceService implements BaseService<AttendanceRequestDTO, Atte
         return list;
     }
 
-    public void sendToRabbit(AttendanceRequestDTO attendanceRequestDTO, Integer attendanceId) throws JsonProcessingException {
+    public void sendToRabbit(AttendanceRequestDTO attendanceRequestDTO, String attendanceId) throws JsonProcessingException {
         String json = objectMapper.writeValueAsString(attendanceRequestDTO);
         sender.send(json);
         attendanceRepository.updateSent(attendanceId);

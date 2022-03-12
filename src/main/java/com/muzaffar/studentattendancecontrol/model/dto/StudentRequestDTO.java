@@ -14,6 +14,6 @@ public class StudentRequestDTO {
     private String firstName;
     private String patronymic;
     private String birthDate;
-    private Integer attachmentId;
-    private Integer groupId;
+    private String attachmentId;
+    private String groupId;
 }

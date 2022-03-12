@@ -1,11 +1,10 @@
 package com.muzaffar.studentattendancecontrol.service;
 
 import com.muzaffar.studentattendancecontrol.entity.Attachment;
-import com.muzaffar.studentattendancecontrol.entity.Student;
 import com.muzaffar.studentattendancecontrol.exception.MissRequiredParam;
 import com.muzaffar.studentattendancecontrol.exception.NotFoundException;
 import com.muzaffar.studentattendancecontrol.exception.NotValidParamException;
-import com.muzaffar.studentattendancecontrol.repository.AttachmentRepository;
+import com.muzaffar.studentattendancecontrol.repository.jpa.AttachmentRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,13 +28,13 @@ public class AttachmentService implements BaseService<MultipartHttpServletReques
     public static final String FILE_PACKAGE = "file/attachment/";
 
     @Override
-    public Integer add(MultipartHttpServletRequest request) {
+    public String add(MultipartHttpServletRequest request) {
         Iterator<String> fileNames = request.getFileNames();
         MultipartFile file = request.getFile(fileNames.next());
         return add(file);
     }
 
-    public Integer add(MultipartFile file) {
+    public String add(MultipartFile file) {
         if (file == null)
             throw new MissRequiredParam("No file was sent");
         String originalFilename = file.getOriginalFilename();
@@ -62,12 +61,12 @@ public class AttachmentService implements BaseService<MultipartHttpServletReques
     }
 
     @Override
-    public List<Attachment> getList(Integer studentId) {
+    public List<Attachment> getList(String studentId) {
         return null;
     }
 
     @Override
-    public Attachment get(Integer id) {
+    public Attachment get(String id) {
         Optional<Attachment> optional = attachmentRepository.findById(id);
         if (optional.isPresent())
             return optional.get();
@@ -75,7 +74,7 @@ public class AttachmentService implements BaseService<MultipartHttpServletReques
     }
 
     @Override
-    public Attachment update(Integer id, MultipartHttpServletRequest request) {
+    public Attachment update(String id, MultipartHttpServletRequest request) {
         Attachment attachment = get(id);
         Iterator<String> fileNames = request.getFileNames();
         MultipartFile file = request.getFile(fileNames.next());
@@ -106,7 +105,7 @@ public class AttachmentService implements BaseService<MultipartHttpServletReques
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(String id) {
         Attachment attachment = get(id);
         File file = new File(FILE_PACKAGE + attachment.getName());
         file.deleteOnExit();
@@ -118,7 +117,7 @@ public class AttachmentService implements BaseService<MultipartHttpServletReques
         return null;
     }
 
-    public void download(HttpServletResponse response, Integer id) throws IOException {
+    public void download(HttpServletResponse response, String id) throws IOException {
         Attachment attachment = get(id);
         InputStream inputStream = new FileInputStream(FILE_PACKAGE + attachment.getName());
         response.setHeader("Content-Disposition", "attachment; filename=\"" +

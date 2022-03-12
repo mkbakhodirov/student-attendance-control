@@ -4,7 +4,7 @@ import com.muzaffar.studentattendancecontrol.entity.Faculty;
 import com.muzaffar.studentattendancecontrol.exception.NotFoundException;
 import com.muzaffar.studentattendancecontrol.exception.UniqueException;
 import com.muzaffar.studentattendancecontrol.model.dto.FacultyRequestDTO;
-import com.muzaffar.studentattendancecontrol.repository.FacultyRepository;
+import com.muzaffar.studentattendancecontrol.repository.jpa.FacultyRepository;
 import com.muzaffar.studentattendancecontrol.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
@@ -23,7 +23,7 @@ public class FacultyService implements BaseService<FacultyRequestDTO, Faculty> {
     private final FacultyRepository facultyRepository;
 
     @Override
-    public Integer add(FacultyRequestDTO facultyRequestDTO) {
+    public String add(FacultyRequestDTO facultyRequestDTO) {
         String name = facultyRequestDTO.getName();
         boolean exists = facultyRepository.existsByName(name);
         if (exists)
@@ -38,7 +38,7 @@ public class FacultyService implements BaseService<FacultyRequestDTO, Faculty> {
     }
 
     @Override
-    public Faculty get(Integer id) {
+    public Faculty get(String id) {
         Optional<Faculty> optional = facultyRepository.findById(id);
         if (optional.isPresent())
             return optional.get();
@@ -46,7 +46,7 @@ public class FacultyService implements BaseService<FacultyRequestDTO, Faculty> {
     }
 
     @Override
-    public Faculty update(Integer id, FacultyRequestDTO facultyRequestDTO) {
+    public Faculty update(String id, FacultyRequestDTO facultyRequestDTO) {
         Optional<Faculty> optional = facultyRepository.findById(id);
         if (optional.isPresent()) {
             Faculty faculty = optional.get();
@@ -62,7 +62,7 @@ public class FacultyService implements BaseService<FacultyRequestDTO, Faculty> {
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(String id) {
         boolean exists = facultyRepository.existsById(id);
         if (!exists)
             throw new NotFoundException("Faculty is not found");
@@ -70,7 +70,7 @@ public class FacultyService implements BaseService<FacultyRequestDTO, Faculty> {
     }
 
     @Override
-    public List<Faculty> getList(Integer id) {
+    public List<Faculty> getList(String id) {
         return null;
     }
 
@@ -88,7 +88,7 @@ public class FacultyService implements BaseService<FacultyRequestDTO, Faculty> {
                 for (int j = 1; j < 3; j++) {
                     Faculty faculty = faculties.get(i - 2);
                     switch (j) {
-                        case 1 -> row.getCell(j).setCellValue(String.valueOf(faculty.getId()));
+                        case 1 -> row.getCell(j).setCellValue(faculty.getId());
                         case 2 -> row.getCell(j).setCellValue(faculty.getName());
                     }
                 }

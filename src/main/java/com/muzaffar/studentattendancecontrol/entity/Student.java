@@ -5,10 +5,15 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.muzaffar.studentattendancecontrol.entity.base.BaseEntity;
 import lombok.*;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
@@ -16,7 +21,9 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
+@Document(indexName = "student")
 public class Student extends BaseEntity {
+    @Field(type = FieldType.Text)
     private String lastName;
     private String firstName;
     private String patronymic;

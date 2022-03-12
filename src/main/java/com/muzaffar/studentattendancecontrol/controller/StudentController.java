@@ -28,11 +28,11 @@ public class StudentController {
     @PostMapping
     public ResponseEntity<?> add(@ModelAttribute StudentRequestDTO studentRequestDTO) {
         MultipartFile file = studentRequestDTO.getFile();
-        Integer attachmentId = attachmentService.add(file);
+        String attachmentId = attachmentService.add(file);
         if (attachmentId == null)
             return ResponseEntity.internalServerError().body("File cannot be saved");
         studentRequestDTO.setAttachmentId(attachmentId);
-        Integer studentId = studentService.add(studentRequestDTO);
+        String studentId = studentService.add(studentRequestDTO);
         URI uri =
                 ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                         .buildAndExpand(studentId).toUri();
@@ -40,27 +40,44 @@ public class StudentController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Student> get(@PathVariable Integer id) {
+    public ResponseEntity<?> get(@PathVariable String id) {
         return ResponseEntity.ok(studentService.get(id));
     }
 
     @GetMapping("/byGroup/{groupId}")
-    public ResponseEntity<?> getList(@PathVariable Integer groupId) {
+    public ResponseEntity<?> getList(@PathVariable String groupId) {
         return ResponseEntity.ok(studentService.getList(groupId));
     }
 
     @GetMapping
-    public ResponseEntity<List<Student>> getList() {
+    public ResponseEntity<?> getList() {
         return ResponseEntity.ok(studentService.getList());
     }
 
+    @GetMapping("search/byFullName")
+    public ResponseEntity<?> getList(@RequestParam("lastName") String lastName,
+                                     @RequestParam("firstName") String firstName
+    ) {
+        return ResponseEntity.ok(studentService.getList(lastName, firstName));
+    }
+
+    @GetMapping("search/byLastName")
+    public ResponseEntity<?> getListByLastName(@RequestParam("lastName") String lastName) {
+        return ResponseEntity.ok(studentService.getListByLastName(lastName));
+    }
+
+    @GetMapping("search/byGroupName")
+    public ResponseEntity<?> getListByGroupName(@RequestParam("groupName") String groupName) {
+        return ResponseEntity.ok(studentService.getListByGroupName(groupName));
+    }
+
     @PutMapping("{id}")
-    public ResponseEntity<Student> update(@PathVariable Integer id, @RequestBody StudentRequestDTO studentRequestDTO) {
+    public ResponseEntity<?> update(@PathVariable String id, @RequestBody StudentRequestDTO studentRequestDTO) {
         return ResponseEntity.ok(studentService.update(id, studentRequestDTO));
     }
 
     @DeleteMapping("{id}")
-    public void delete(@PathVariable Integer id) {
+    public void delete(@PathVariable String id) {
         studentService.delete(id);
     }
 
@@ -83,7 +100,7 @@ public class StudentController {
     }
 
     @GetMapping("download/pdf/{id}")
-    public void downloadPdf(@PathVariable Integer id, HttpServletResponse response) {
+    public void downloadPdf(@PathVariable String id, HttpServletResponse response) {
         try {
             File file = studentService.getPdf(id);
             studentService.download(response, file);

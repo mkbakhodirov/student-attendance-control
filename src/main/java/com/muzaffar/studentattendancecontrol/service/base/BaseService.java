@@ -10,12 +10,12 @@ import java.util.List;
 public interface BaseService<T, R> {
     String DOWNLOAD_PDF = "file/downloadPdf/";
 
-    Integer add(T t);
+    String add(T t);
     List<R> getList();
-    List<R> getList(Integer id);
-    R get(Integer id);
-    void delete(Integer id);
-    R update(Integer id, T t);
+    List<R> getList(String id);
+    R get(String id);
+    void delete(String id);
+    R update(String id, T t);
     File getFile();
     List<R> uploadExcel(MultipartFile file);
     default void download(HttpServletResponse response, File file) throws IOException {

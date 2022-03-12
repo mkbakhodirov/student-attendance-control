@@ -2,7 +2,8 @@ package com.muzaffar.studentattendancecontrol.controller;
 
 import com.muzaffar.studentattendancecontrol.entity.Attendance;
 import com.muzaffar.studentattendancecontrol.model.dto.AttendanceRequestDTO;
-import com.muzaffar.studentattendancecontrol.repository.AttendanceRepository;
+import com.muzaffar.studentattendancecontrol.model.response.ApiExceptionResponse;
+import com.muzaffar.studentattendancecontrol.repository.jpa.AttendanceRepository;
 import com.muzaffar.studentattendancecontrol.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -27,7 +29,7 @@ public class AttendanceController {
 
     @PostMapping
     public ResponseEntity<?> add(@RequestBody AttendanceRequestDTO attendanceRequestDTO) throws Exception {
-        Integer attendanceId = attendanceService.add(attendanceRequestDTO);
+        String attendanceId = attendanceService.add(attendanceRequestDTO);
         URI uri =
                 ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                         .buildAndExpand(attendanceId).toUri();
@@ -36,8 +38,8 @@ public class AttendanceController {
     }
 
     @PostMapping("arrive")
-    public ResponseEntity<?> arrive(@RequestParam("studentId") Integer studentId) {
-        Integer attendanceId = attendanceService.arrive(studentId);
+    public ResponseEntity<?> arrive(@RequestParam("studentId") String studentId) {
+        String attendanceId = attendanceService.arrive(studentId);
         URI uri =
                 ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                         .buildAndExpand(attendanceId).toUri();
@@ -45,8 +47,8 @@ public class AttendanceController {
     }
 
     @PostMapping("departure")
-    public ResponseEntity<?> departure(@RequestParam("studentId") Integer studentId) {
-        Integer attendanceId = attendanceService.departure(studentId);
+    public ResponseEntity<?> departure(@RequestParam("studentId") String studentId) {
+        String  attendanceId = attendanceService.departure(studentId);
         URI uri =
                 ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                         .buildAndExpand(attendanceId).toUri();
@@ -54,12 +56,12 @@ public class AttendanceController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Attendance> get(@PathVariable Integer id) {
+    public ResponseEntity<Attendance> get(@PathVariable String id) {
         return ResponseEntity.ok(attendanceService.get(id));
     }
 
     @GetMapping("/byStudent/{studentId}")
-    public ResponseEntity<?> getList(@PathVariable Integer studentId) {
+    public ResponseEntity<?> getList(@PathVariable String studentId) {
         return ResponseEntity.ok(attendanceService.getList(studentId));
     }
 
@@ -69,12 +71,12 @@ public class AttendanceController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<Attendance> update(@PathVariable Integer id, @RequestBody AttendanceRequestDTO attendanceRequestDTO) {
+    public ResponseEntity<Attendance> update(@PathVariable String id, @RequestBody AttendanceRequestDTO attendanceRequestDTO) {
         return ResponseEntity.ok(attendanceService.update(id, attendanceRequestDTO));
     }
 
     @DeleteMapping("{id}")
-    public void delete(@PathVariable Integer id) {
+    public void delete(@PathVariable String id) {
         attendanceService.delete(id);
     }
 
@@ -89,7 +91,7 @@ public class AttendanceController {
     }
 
     @GetMapping("download/byStudent/{studentId}")
-    public void downloadByStudent(@PathVariable Integer studentId, HttpServletResponse response) {
+    public void downloadByStudent(@PathVariable String studentId, HttpServletResponse response) {
         File file = attendanceService.getFile(studentId);
         try {
             attendanceService.download(response, file);
@@ -101,8 +103,12 @@ public class AttendanceController {
     @PostMapping("upload")
     public ResponseEntity<?> upload(MultipartFile file) {
         List<Attendance> attendances = attendanceService.uploadExcel(file);
-        if (attendances == null)
-            return ResponseEntity.badRequest().body("Send Excel file");
+        if (attendances == null) {
+            ApiExceptionResponse apiExceptionResponse = new ApiExceptionResponse();
+            apiExceptionResponse.setTimestamp(LocalDateTime.now());
+            apiExceptionResponse.setMessage("Send Excel file");
+            return ResponseEntity.badRequest().body(apiExceptionResponse);
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(attendances);
     }
 }

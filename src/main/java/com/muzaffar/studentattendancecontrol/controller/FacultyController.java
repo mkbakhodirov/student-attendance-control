@@ -27,7 +27,7 @@ public class FacultyController {
 
     @PostMapping
     public ResponseEntity<?> add(@Valid @RequestBody FacultyRequestDTO facultyRequestDTO) {
-        Integer facultyId = facultyService.add(facultyRequestDTO);
+        String facultyId = facultyService.add(facultyRequestDTO);
         URI uri =
                 ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                         .buildAndExpand(facultyId).toUri();
@@ -35,7 +35,7 @@ public class FacultyController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Faculty> get(@PathVariable Integer id) {
+    public ResponseEntity<Faculty> get(@PathVariable String id) {
         return ResponseEntity.ok(facultyService.get(id));
     }
 
@@ -45,12 +45,12 @@ public class FacultyController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<Faculty> update(@PathVariable Integer id, @RequestBody FacultyRequestDTO facultyRequestDTO) {
+    public ResponseEntity<Faculty> update(@PathVariable String id, @RequestBody FacultyRequestDTO facultyRequestDTO) {
         return ResponseEntity.ok(facultyService.update(id, facultyRequestDTO));
     }
 
     @DeleteMapping("{id}")
-    public void delete(@PathVariable Integer id) {
+    public void delete(@PathVariable String id) {
         facultyService.delete(id);
     }
 

@@ -26,7 +26,7 @@ public class GroupController {
 
     @PostMapping
     public ResponseEntity<?> add(@RequestBody GroupRequestDTO groupRequestDTO) {
-        Integer groupId = groupService.add(groupRequestDTO);
+        String groupId = groupService.add(groupRequestDTO);
         URI uri =
                 ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                         .buildAndExpand(groupId).toUri();
@@ -34,12 +34,12 @@ public class GroupController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Group> get(@PathVariable Integer id) {
+    public ResponseEntity<Group> get(@PathVariable String id) {
         return ResponseEntity.ok(groupService.get(id));
     }
 
     @GetMapping("/byFaculty/{facultyId}")
-    public ResponseEntity<?> getList(@PathVariable Integer facultyId) {
+    public ResponseEntity<?> getList(@PathVariable String facultyId) {
         return ResponseEntity.ok(groupService.getList(facultyId));
     }
 
@@ -49,12 +49,12 @@ public class GroupController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<Group> update(@PathVariable Integer id, @RequestBody GroupRequestDTO groupRequestDTO) {
+    public ResponseEntity<Group> update(@PathVariable String id, @RequestBody GroupRequestDTO groupRequestDTO) {
         return ResponseEntity.ok(groupService.update(id, groupRequestDTO));
     }
 
     @DeleteMapping("{id}")
-    public void delete(@PathVariable Integer id) {
+    public void delete(@PathVariable String id) {
         groupService.delete(id);
     }
 

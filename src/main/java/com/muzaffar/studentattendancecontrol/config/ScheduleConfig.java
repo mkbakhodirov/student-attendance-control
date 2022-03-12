@@ -1,6 +1,6 @@
 package com.muzaffar.studentattendancecontrol.config;
 
-import com.muzaffar.studentattendancecontrol.repository.AttendanceRepository;
+import com.muzaffar.studentattendancecontrol.repository.jpa.AttendanceRepository;
 import com.muzaffar.studentattendancecontrol.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;

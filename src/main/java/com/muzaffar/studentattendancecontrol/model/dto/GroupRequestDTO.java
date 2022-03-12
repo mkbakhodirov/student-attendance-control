@@ -9,5 +9,5 @@ public class GroupRequestDTO {
     @NotBlank
     private String name;
     @NotBlank
-    private Integer facultyId;
+    private String facultyId;
 }
