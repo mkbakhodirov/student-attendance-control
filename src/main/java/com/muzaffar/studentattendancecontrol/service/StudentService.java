@@ -10,6 +10,7 @@ import com.muzaffar.studentattendancecontrol.entity.Attendance;
 import com.muzaffar.studentattendancecontrol.entity.Group;
 import com.muzaffar.studentattendancecontrol.entity.Student;
 import com.muzaffar.studentattendancecontrol.exception.NotFoundException;
+import com.muzaffar.studentattendancecontrol.model.StudentModel;
 import com.muzaffar.studentattendancecontrol.model.dto.StudentRequestDTO;
 import com.muzaffar.studentattendancecontrol.repository.elasticsearch.StudentElasticRepo;
 import com.muzaffar.studentattendancecontrol.repository.jpa.StudentRepository;
@@ -54,6 +55,9 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
         student.setBirthDate(LocalDate.parse(studentRequestDTO.getBirthDate()));
         student.setGroup(group);
         student.setAttachment(attachment);
+        StudentModel studentModel = new StudentModel();
+        studentModel.convert(student);
+        studentElasticRepo.save(studentModel);
         return studentRepository.save(student).getId();
     }
 
@@ -237,18 +241,18 @@ public class StudentService implements BaseService<StudentRequestDTO, Student> {
         return file;
     }
 
-    public List<Student> getListByLastName(String lastName) {
+    public List<StudentModel> getListByLastName(String lastName) {
         System.out.println(1);
-        List<Student> list = studentElasticRepo.findByLastName(lastName);
+        List<StudentModel> list = studentElasticRepo.findByLastName(lastName);
         System.out.println(list);
         return list;
     }
 
-    public List<Student> getList(String lastName, String firstName) {
+    public List<StudentModel> getList(String lastName, String firstName) {
         return studentElasticRepo.findAllByLastNameAndFirstName(lastName, firstName);
     }
 
-    public List<Student> getListByGroupName(String groupName) {
-        return studentElasticRepo.findAllByGroup_Name(groupName);
+    public List<StudentModel> getListByGroupName(String groupName) {
+        return studentElasticRepo.findAllByGroupName(groupName);
     }
 }

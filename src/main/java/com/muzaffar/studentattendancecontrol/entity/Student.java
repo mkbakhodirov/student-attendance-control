@@ -21,9 +21,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Document(indexName = "student")
 public class Student extends BaseEntity {
-    @Field(type = FieldType.Text)
     private String lastName;
     private String firstName;
     private String patronymic;
